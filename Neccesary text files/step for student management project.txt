@@ -1,0 +1,14 @@
+Student management system project step
+1) creating a folder
+2) Create a Virtual Ennvironment
+3) requirements.txt> fastapi,uvicorn,pydantic,sqlalchemy, pymysql
+4) create a database.py file
+5) create student_odel.py file
+6) create schema.py file
+7) create Student_repository.py file
+8) create Student_service.py file
+9) create student_controller file
+10)Create main.py file
+
+
+

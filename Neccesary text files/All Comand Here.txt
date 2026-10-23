@@ -1,0 +1,16 @@
+Git Command
+echo "# My-Project-SMS" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/mahfuztech24/My-Project-SMS.git
+git push -u origin main
+
+Virtual Environment Command
+Create Venv> python -m venv venv 
+Active Venv>nv\Scripts\Activate   
+bypass Command>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass 
+txt file install> pip install -r requirements.txt 
+Reload > python -m uvicorn main:app --reload 
+

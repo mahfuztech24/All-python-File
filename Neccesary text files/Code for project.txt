@@ -1,0 +1,156 @@
+databse file code----
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/users_db"
+
+engine = create_engine(DATABASE_URL)
+
+Base = declarative_base()
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+main file code---
+from fastapi import FastAPI
+import user
+from database import engine
+import user_controller
+user.Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Md Mahfuzur Rahman")
+
+app.include_router(user_controller.router)
+
+@app.get("/")
+def home():
+    return {"message": "Hello Bangladesh"}
+
+repository file code-----
+
+
+from sqlalchemy.orm import Session
+from user import User
+
+
+class UserRepository:
+    def create_user(self, db: Session, user: User):
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
+    def get_user_by_id(self, db: Session, id: int):
+        return db.query(User).filter(User.id == id).first()
+
+    def get_all_user(self, db: Session):
+        return db.query(User).all()
+
+schema file code-----
+
+from pydantic import BaseModel
+
+class BaseUser(BaseModel):
+     name: str
+     email: str
+     age: int
+
+class UserCreateRequest(BaseUser):
+    pass
+
+class UserResponse(BaseUser):
+    id: int
+
+    class Config:
+        from_attribute=True
+
+sevice file code---
+
+
+from sqlalchemy.orm import Session
+from repository import UserRepository
+from schema import UserCreateRequest
+from user import User
+
+
+class UserService:
+    def __init__(self):
+        self.user_repository = UserRepository()
+
+    def create_user(self, db: Session, user_payload: UserCreateRequest):
+        user = User(
+            name=user_payload.name,
+            email=user_payload.email,
+            age=user_payload.age
+        )
+        return self.user_repository.create_user(db, user)
+
+student file code----
+
+from database import base
+from sqlalchemy import Colum, String, Integer
+
+class Student(base):
+    __tablename__="students"
+    __table_args__={"schema":"training"}
+
+    id=Colum(Integer, primary_key=True, autincrement=True)
+    name=Colum(String[50])
+
+user control file code----
+
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+
+from schema import UserCreateRequest
+from database import get_db
+from service import UserService
+
+router = APIRouter(
+    prefix="/user",
+    tags=["User"]
+)
+
+
+@router.post("/create", status_code=status.HTTP_201_CREATED)
+def create_user(
+    payload: UserCreateRequest,
+    db: Session = Depends(get_db)
+):
+    service = UserService()
+    result = service.create_user(db, payload)
+
+    return result
+
+user file code---
+
+
+from sqlalchemy import Column, Integer, String, CheckConstraint
+from database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    __table_args__ = (
+        CheckConstraint(
+            "age >= 18 AND age <= 150",
+            name="check_user_age"
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
+    age = Column(Integer, nullable=False)
+
